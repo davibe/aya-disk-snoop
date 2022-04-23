@@ -1,2 +1,5 @@
 [workspace]
 members = ["aya-disk-snoop", "aya-disk-snoop-common", "xtask"]
+
+[patch.crates-io]
+aya = { git = "https://github.com/aya-rs/aya", branch = "main", features=["async_tokio"] }

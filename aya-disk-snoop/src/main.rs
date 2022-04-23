@@ -5,6 +5,8 @@ use simplelog::{ColorChoice, ConfigBuilder, LevelFilter, TermLogger, TerminalMod
 use structopt::StructOpt;
 use tokio::signal;
 
+use aya_log::BpfLogger;
+
 #[derive(Debug, StructOpt)]
 struct Opt {
     
@@ -12,7 +14,7 @@ struct Opt {
 
 #[tokio::main]
 async fn main() -> Result<(), anyhow::Error> {
-    let opt = Opt::from_args();
+    let _opt = Opt::from_args();
 
     TermLogger::init(
         LevelFilter::Debug,
@@ -36,9 +38,15 @@ async fn main() -> Result<(), anyhow::Error> {
     let mut bpf = Bpf::load(include_bytes_aligned!(
         "../../target/bpfel-unknown-none/release/aya-disk-snoop"
     ))?;
-    let program: &mut KProbe = bpf.program_mut("aya_disk_snoop").unwrap().try_into()?;
-    program.load()?;
-    program.attach("blk_start_request", 0)?;
+    BpfLogger::init(&mut bpf).unwrap();
+
+    let program_start: &mut KProbe = bpf.program_mut("aya_disk_snoop_start").unwrap().try_into()?;
+    program_start.load()?;
+    program_start.attach("blk_mq_start_request", 0)?;
+
+    let program_end: &mut KProbe = bpf.program_mut("aya_disk_snoop_end").unwrap().try_into()?;
+    program_end.load()?;
+    program_end.attach("blk_account_io_done", 0)?;
 
     info!("Waiting for Ctrl-C...");
     signal::ctrl_c().await?;
