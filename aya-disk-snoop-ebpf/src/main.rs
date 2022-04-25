@@ -56,7 +56,7 @@ unsafe fn try_aya_disk_snoop_end(ctx: ProbeContext) -> Result<u32, u32> {
     // off-set 40 is for linux 5.13.0
     let data_len = bpf_probe_read((base + 40) as *const u32).or(Err(0u32))?;
 
-    info!(&ctx, "pointer: {} time: {} cmdflags: {} data-len: {}", base, elapsed / 1000000, cmdflags, data_len);
+    info!(&ctx, "pointer: {} time: {} (ms) cmdflags: {} data-len: {}", base, elapsed / 1000, cmdflags, data_len);
 
     Ok(0)
 }
